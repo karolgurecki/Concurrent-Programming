@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>CP</groupId>
+    <artifactId>CP</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0-SNAPSHOT</version>
+    <description>
+        General module for Concurrent-Programming laboratory issues
+    </description>
+    <modules>
+        <module>CPSemaphore</module>
+    </modules>
+
+    <properties>
+        <!-- Generic properties -->
+        <jdk.version>1.7</jdk.version>
+        <project.compiler.sourceEncoding>UTF-8</project.compiler.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.compiler.plugin.optimize>true</project.compiler.plugin.optimize>
+        <project.compiler.plugin.showDeprecation>true</project.compiler.plugin.showDeprecation>
+        <project.surefire.plugin.version>2.15</project.surefire.plugin.version>
+        <project.compiler.plugin.version>3.1</project.compiler.plugin.version>
+        <project.compiler.plugin.verbose>true</project.compiler.plugin.verbose>
+        <project.compiler.plugin.fork>true</project.compiler.plugin.fork>
+        <!-- Generic properties -->
+        <!-- logging -->
+        <log4j.version>1.2.17</log4j.version>
+        <slf4j-log4j12.version>1.7.5</slf4j-log4j12.version>
+        <commons-logging.version>1.1.3</commons-logging.version>
+        <!-- logging -->
+    </properties>
+
+    <dependencies>
+        <!-- log4j -->
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j-log4j12.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>${commons-logging.version}</version>
+        </dependency>
+        <!-- log4j -->
+    </dependencies>
+
+    <build>
+        <finalName>CP</finalName>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${project.compiler.plugin.version}</version>
+                <configuration>
+                    <compilerArguments>
+                        <Xlint/>
+                    </compilerArguments>
+                    <source>${jdk.version}</source>
+                    <target>${jdk.version}</target>
+                    <encoding>${project.compiler.sourceEncoding}</encoding>
+                    <optimize>${project.compiler.plugin.optimize}</optimize>
+                    <showDeprecation>${project.compiler.plugin.showDeprecation}</showDeprecation>
+                    <fork>${project.compiler.plugin.fork}</fork>
+                    <verbose>${project.compiler.plugin.verbose}</verbose>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+
+</project>
