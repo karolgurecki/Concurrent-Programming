@@ -1,4 +1,4 @@
-package org.cp.semaphores.threads;
+package org.cp.semaphores.core.threads;
 
 /**
  * {@code CFSemaphore} stands for <b>CalculatingFractalPathSemaphore</b>.

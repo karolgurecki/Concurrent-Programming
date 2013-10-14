@@ -1,4 +1,4 @@
-package org.cp.semaphores;
+package org.cp.semaphores.core;
 
 /**
  * @author kornicameister

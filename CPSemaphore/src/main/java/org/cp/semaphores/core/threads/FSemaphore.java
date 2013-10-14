@@ -1,9 +1,9 @@
-package org.cp.semaphores.threads;
+package org.cp.semaphores.core.threads;
 
 import com.google.common.base.Objects;
 import org.apache.log4j.Logger;
-import org.cp.semaphores.SemaphoreRunnable;
-import org.cp.semaphores.beans.FractalBean;
+import org.cp.semaphores.core.SemaphoreRunnable;
+import org.cp.semaphores.core.beans.FractalBean;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
