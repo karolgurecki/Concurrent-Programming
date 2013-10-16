@@ -1,13 +1,16 @@
 package org.cp.semaphores.threads;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
 import org.apache.log4j.Logger;
 import org.cp.semaphores.fractal.FractalConfiguration;
 import org.cp.semaphores.fractal.beans.FractalBean;
 import org.cp.semaphores.fractal.beans.FractalConstant;
 import org.cp.semaphores.fractal.beans.FractalVariable;
+import org.cp.semaphores.fractal.path.FractalPath;
 import org.cp.semaphores.fractal.rule.FractalRule;
 
+import java.util.Deque;
 import java.util.List;
 
 /**
@@ -25,9 +28,10 @@ public class CFPSemaphore
     private final FractalConstant       axiom;
     private final List<FractalConstant> constants;
     private final List<FractalRule>     rules;
-    private boolean initialGeneration = true;
 
-    public CFPSemaphore(final FractalConfiguration fractalConfiguration) {
+
+    public CFPSemaphore(final Deque<FractalPath> resource, final FractalConfiguration fractalConfiguration) {
+        super(resource);
         this.axiom = fractalConfiguration.getAxiom();
         this.constants = fractalConfiguration.getConstants();
         this.rules = fractalConfiguration.getRules();
@@ -36,32 +40,33 @@ public class CFPSemaphore
     @Override
     protected void runInternal() {
         LOGGER.info(String.format("Entering critical => %d", this.rounds.getRound()));
-        {
-            if (this.isInitial()) {
-                this.resource.add(new FractalVariable(this.axiom.getSymbol()));
-                this.initialGeneration = false;
-                LOGGER.debug(String.format("Initial generation, current queue=%d", this.resource.size()));
-            }
-            for (final FractalVariable variable : this.resource) {
-                for (final FractalRule rule : this.rules) {
-                    for (final FractalBean predecessor : rule.getPredecessor()) {
-                        if (predecessor.equals(variable)) {
-                            for (final FractalBean successor : rule.getSuccessors()) {
-                                final FractalVariable nextElement = new FractalVariable(successor.getSymbol());
-                                LOGGER.debug(String
-                                        .format("For predecessor=[ %s ] generated nextElement= [ %s ]", predecessor.getSymbol(), nextElement.getSymbol()));
-                                this.resource.offer(nextElement);
-                            }
+
+        final FractalPath peek = this.resource.peekLast();
+        final List<FractalVariable> nextRawPath = Lists.newArrayList();
+
+        for (final FractalVariable path : peek.getRawPath()) {
+
+            for (final FractalRule rule : this.rules) {
+                for (final FractalBean predecessor : rule.getPredecessor()) {
+                    if (predecessor.equals(path)) {
+                        final List<FractalBean> successors = rule.getSuccessors();
+
+                        for (final FractalBean successor : successors) {
+                            nextRawPath.add(new FractalVariable(successor.getSymbol()));
                         }
+
                     }
                 }
             }
-        }
-        LOGGER.info(String.format("Leaving critical => %d", this.rounds.getRound()));
-    }
 
-    private boolean isInitial() {
-        return this.resource.isEmpty() || this.initialGeneration;
+        }
+
+        final FractalPath path = new FractalPath(nextRawPath.toArray(new FractalVariable[nextRawPath.size()]));
+        if (this.resource.offerFirst(path)) {
+            LOGGER.debug(String.format("From %s to %s", peek.getRawPath(), path.getRawPath()));
+        }
+
+        LOGGER.info(String.format("Leaving critical => %d", this.rounds.getRound()));
     }
 
     @Override

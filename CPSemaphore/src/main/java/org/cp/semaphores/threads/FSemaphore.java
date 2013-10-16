@@ -1,9 +1,9 @@
 package org.cp.semaphores.threads;
 
 import com.google.common.base.Objects;
-import org.cp.semaphores.fractal.beans.FractalVariable;
+import org.cp.semaphores.fractal.path.FractalPath;
 
-import java.util.Queue;
+import java.util.Deque;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -16,19 +16,17 @@ import java.util.concurrent.Semaphore;
  */
 abstract class FSemaphore
         implements SemaphoreRunnable {
-    protected Semaphore              semaphore;
-    protected Queue<FractalVariable> resource;
-    protected RoundsFlag             rounds;
+    protected final Deque<FractalPath> resource;
+    protected       Semaphore          semaphore;
+    protected       RoundsFlag         rounds;
+
+    protected FSemaphore(final Deque<FractalPath> resource) {
+        this.resource = resource;
+    }
 
     @Override
     public final SemaphoreRunnable setSemaphore(final Semaphore semaphore) {
         this.semaphore = semaphore;
-        return this;
-    }
-
-    @Override
-    public final SemaphoreRunnable setSharedResource(final Queue<FractalVariable> resource) {
-        this.resource = resource;
         return this;
     }
 
@@ -42,12 +40,18 @@ abstract class FSemaphore
     public final void run() {
         while (this.rounds.hasNext()) {
             try {
+                Thread.sleep(100);
                 this.semaphore.acquire();
-                this.rounds.next();
-                this.runInternal();
-                this.semaphore.release();
             } catch (InterruptedException e) {
-                System.err.println(e.getMessage());
+                System.err.println(e);
+            }
+            try {
+                this.rounds.next();
+                synchronized (this.resource) {
+                    this.runInternal();
+                }
+            } finally {
+                this.semaphore.release();
             }
         }
     }

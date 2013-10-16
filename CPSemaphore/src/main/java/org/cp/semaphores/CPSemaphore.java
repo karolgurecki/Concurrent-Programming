@@ -2,9 +2,9 @@ package org.cp.semaphores;
 
 import com.google.common.collect.Sets;
 import org.apache.log4j.Logger;
-import org.cp.semaphores.core.FMutex;
 import org.cp.semaphores.fractal.FractalConfiguration;
 import org.cp.semaphores.fractal.beans.FractalVariable;
+import org.cp.semaphores.fractal.path.FractalPath;
 import org.cp.semaphores.threads.CFPSemaphore;
 import org.cp.semaphores.threads.DFPSemaphore;
 
@@ -12,7 +12,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.*;
 
 /**
  * @author kornicameister
@@ -34,15 +34,13 @@ public class CPSemaphore {
         LOGGER.info(String.format("%s has finished...", CPSemaphore.class.getSimpleName()));
     }
 
-    private void run() {
-        final ThreadGroup threadGroup = new ThreadGroup(this.getClass().getName());
+    private void run() throws InterruptedException {
+        final ExecutorService executorService = Executors.newCachedThreadPool();
         for (final Runnable runnable : this.threadPool) {
-            final Thread thread = new Thread(threadGroup, runnable);
-            thread.setName(runnable.getClass().getName());
-            thread.start();
-
-            LOGGER.info(String.format("Bootstrapped with thread=%s", thread));
+            LOGGER.info(String.format("Bootstrapped with thread=%s", executorService.submit(runnable)));
         }
+        executorService.shutdown();
+        executorService.awaitTermination(1, TimeUnit.MINUTES);
     }
 
     private void initFromCmd(final List<String> args) {
@@ -72,16 +70,20 @@ public class CPSemaphore {
 
     private Set<Runnable> initThreadPool(final Properties properties) {
         final Set<Runnable> runnables = Sets.newHashSet();
-        final Queue<FractalVariable> arrayLifoQueue = Collections.asLifoQueue(new ArrayDeque<FractalVariable>());
-        final Semaphore semaphore = new FMutex();
+        final Deque<FractalPath> arrayLifoQueue = new ConcurrentLinkedDeque<>();
         final Integer rounds = Integer.valueOf(properties.getProperty("fractal.iterations"));
+        final Integer permits = Integer.valueOf(properties.getProperty("fractal.permits"));
+        final Integer angle = Integer.valueOf(properties.getProperty("fractal.angle"));
+        final Semaphore semaphore = new Semaphore(permits);
 
-        runnables.add(new CFPSemaphore(this.fractalConfiguration).setSemaphore(semaphore)
-                                                                 .setSharedResource(arrayLifoQueue)
-                                                                 .setRounds(rounds));
-        runnables.add(new DFPSemaphore().setSemaphore(semaphore)
-                                        .setSharedResource(arrayLifoQueue)
-                                        .setRounds(rounds));
+        arrayLifoQueue.add(new FractalPath(new FractalVariable(this.fractalConfiguration.getAxiom().getSymbol())));
+
+        for (int i = 0 ; i < permits ; i++) {
+            runnables.add(new CFPSemaphore(arrayLifoQueue, this.fractalConfiguration).setSemaphore(semaphore)
+                                                                                     .setRounds(rounds));
+        }
+        runnables.add(new DFPSemaphore(arrayLifoQueue, new FractalTree(permits * rounds, angle)).setSemaphore(semaphore)
+                                                                                                .setRounds(rounds));
 
         return runnables;
     }

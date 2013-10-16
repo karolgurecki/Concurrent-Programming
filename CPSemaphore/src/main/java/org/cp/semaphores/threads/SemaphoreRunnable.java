@@ -1,8 +1,5 @@
 package org.cp.semaphores.threads;
 
-import org.cp.semaphores.fractal.beans.FractalVariable;
-
-import java.util.Queue;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -13,8 +10,6 @@ import java.util.concurrent.Semaphore;
 public interface SemaphoreRunnable
         extends Runnable {
     SemaphoreRunnable setSemaphore(final Semaphore semaphore);
-
-    SemaphoreRunnable setSharedResource(final Queue<FractalVariable> resource);
 
     SemaphoreRunnable setRounds(final Integer rounds);
 }
