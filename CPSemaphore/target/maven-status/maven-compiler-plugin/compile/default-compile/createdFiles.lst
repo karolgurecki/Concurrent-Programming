@@ -1,0 +1,11 @@
+org\cp\semaphores\fractal\beans\AbstractFractalBean.class
+org\cp\semaphores\fractal\beans\FractalVariable.class
+org\cp\semaphores\threads\FSemaphore.class
+org\cp\semaphores\threads\SemaphoreRunnable.class
+org\cp\semaphores\fractal\rule\FractalRule.class
+org\cp\semaphores\CPSemaphore.class
+org\cp\semaphores\fractal\beans\FractalBean.class
+org\cp\semaphores\threads\DFPSemaphore.class
+org\cp\semaphores\fractal\beans\FractalConstant.class
+org\cp\semaphores\fractal\FractalConfiguration.class
+org\cp\semaphores\threads\CFPSemaphore.class
