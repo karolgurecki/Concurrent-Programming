@@ -6,10 +6,10 @@ import org.apache.log4j.Logger;
 import org.cp.semaphores.fractal.FractalConfiguration;
 import org.cp.semaphores.fractal.beans.FractalBean;
 import org.cp.semaphores.fractal.beans.FractalConstant;
-import org.cp.semaphores.fractal.beans.FractalVariable;
 import org.cp.semaphores.fractal.path.FractalPath;
 import org.cp.semaphores.fractal.rule.FractalRule;
 
+import java.util.Collection;
 import java.util.Deque;
 import java.util.List;
 
@@ -25,43 +25,43 @@ import java.util.List;
 public class CFPSemaphore
         extends FSemaphore {
     private static final Logger LOGGER = Logger.getLogger(CFPSemaphore.class);
-    private final FractalConstant       axiom;
-    private final List<FractalConstant> constants;
-    private final List<FractalRule>     rules;
+    private final FractalConfiguration cfg;
 
 
     public CFPSemaphore(final Deque<FractalPath> resource, final FractalConfiguration fractalConfiguration) {
         super(resource);
-        this.axiom = fractalConfiguration.getAxiom();
-        this.constants = fractalConfiguration.getConstants();
-        this.rules = fractalConfiguration.getRules();
+        this.cfg = fractalConfiguration;
     }
 
     @Override
     protected void runInternal() {
         LOGGER.info(String.format("Entering critical => %d", this.rounds.getRound()));
 
-        final FractalPath peek = this.resource.peekLast();
-        final List<FractalVariable> nextRawPath = Lists.newArrayList();
+        final FractalPath peek = this.resource.peekFirst();
+        final List<FractalBean> nextRawPath = Lists.newArrayList();
 
-        for (final FractalVariable path : peek.getRawPath()) {
+        for (final FractalBean peekElement : peek.getRawPath()) {
 
-            for (final FractalRule rule : this.rules) {
-                for (final FractalBean predecessor : rule.getPredecessor()) {
-                    if (predecessor.equals(path)) {
-                        final List<FractalBean> successors = rule.getSuccessors();
+            // placeholder for the elements of the new path
 
-                        for (final FractalBean successor : successors) {
-                            nextRawPath.add(new FractalVariable(successor.getSymbol()));
-                        }
+            if (this.cfg.isVariable(peekElement)) {
 
+                // loop through all rules and check predecessors
+                for (final FractalRule rule : this.cfg.getRules()) {
+
+                    if (rule.isPredecessor(peekElement)) {
+                        nextRawPath.addAll(this.copyBean(rule.getSuccessors()));
+                        break;
                     }
                 }
+
+            } else if (this.cfg.isConstant(peekElement)) {
+                nextRawPath.add(new FractalConstant(peekElement.getSymbol()));
             }
 
         }
 
-        final FractalPath path = new FractalPath(nextRawPath.toArray(new FractalVariable[nextRawPath.size()]));
+        final FractalPath path = new FractalPath(nextRawPath.toArray(new FractalBean[nextRawPath.size()]));
         if (this.resource.offerFirst(path)) {
             LOGGER.debug(String.format("From %s to %s", peek.getRawPath(), path.getRawPath()));
         }
@@ -69,12 +69,18 @@ public class CFPSemaphore
         LOGGER.info(String.format("Leaving critical => %d", this.rounds.getRound()));
     }
 
+    private Collection<? extends FractalBean> copyBean(final List<FractalBean> beans) {
+        List<FractalBean> fractalBeans = Lists.newArrayList();
+        for (final FractalBean bean : beans) {
+            fractalBeans.add(this.cfg.getBeanFromString(bean.getSymbol())[0]);
+        }
+        return fractalBeans;
+    }
+
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
-                      .addValue(axiom)
-                      .addValue(constants)
-                      .addValue(rules)
+                      .addValue(cfg)
                       .addValue(semaphore)
                       .addValue(resource)
                       .addValue(rounds)

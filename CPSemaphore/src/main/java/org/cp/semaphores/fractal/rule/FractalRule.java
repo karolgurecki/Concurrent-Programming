@@ -60,4 +60,8 @@ public class FractalRule {
 
         return builder.toString();
     }
+
+    public boolean isPredecessor(final FractalBean var) {
+        return this.predecessor.contains(var);
+    }
 }

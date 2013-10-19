@@ -3,6 +3,8 @@ package org.cp.semaphores.fractal.beans;
 import com.google.common.base.Objects;
 
 /**
+ * {@code FractalConstant} is an immutable {@link org.cp.semaphores.fractal.beans.FractalBean}
+ *
  * @author kornicameister
  * @version 0.0.1
  * @since 0.0.1
@@ -10,8 +12,8 @@ import com.google.common.base.Objects;
 public class FractalConstant
         extends AbstractFractalBean {
 
-    public FractalConstant(final String axiom) {
-        this.symbol = axiom;
+    public FractalConstant(final String var) {
+        super(var);
     }
 
     @Override

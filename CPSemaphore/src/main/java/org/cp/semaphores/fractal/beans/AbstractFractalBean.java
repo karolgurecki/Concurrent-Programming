@@ -11,14 +11,13 @@ abstract class AbstractFractalBean
         implements FractalBean {
     protected String symbol;
 
-    @Override
-    public String getSymbol() {
-        return this.symbol;
+    protected AbstractFractalBean(final String symbol) {
+        this.symbol = new String(symbol.getBytes());
     }
 
     @Override
-    public void setSymbol(final String symbol) {
-        this.symbol = symbol;
+    public String getSymbol() {
+        return this.symbol;
     }
 
     @Override

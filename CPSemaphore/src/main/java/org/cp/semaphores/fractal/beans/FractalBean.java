@@ -7,6 +7,4 @@ package org.cp.semaphores.fractal.beans;
  */
 public interface FractalBean {
     String getSymbol();
-
-    void setSymbol(final String symbol);
 }

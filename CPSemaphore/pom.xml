@@ -34,7 +34,7 @@
                     <arguments>
                         <argument>-p</argument>
                         <argument>
-                            D:\Dropbox\STUDIA\INFORMATYKA\SEMESTR7\ConcurrentProgramming\CP\CPSemaphore\src\main\resources\cps.properties
+                            D:/Dropbox/STUDIA/INFORMATYKA/SEMESTR7/ConcurrentProgramming/CP/CPSemaphore/src/main/resources/cps.properties
                         </argument>
                     </arguments>
                 </configuration>

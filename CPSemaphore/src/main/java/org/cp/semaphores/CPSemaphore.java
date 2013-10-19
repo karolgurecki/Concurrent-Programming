@@ -2,11 +2,12 @@ package org.cp.semaphores;
 
 import com.google.common.collect.Sets;
 import org.apache.log4j.Logger;
+import org.cp.semaphores.core.FSemaphore;
 import org.cp.semaphores.fractal.FractalConfiguration;
-import org.cp.semaphores.fractal.beans.FractalVariable;
 import org.cp.semaphores.fractal.path.FractalPath;
 import org.cp.semaphores.threads.CFPSemaphore;
 import org.cp.semaphores.threads.DFPSemaphore;
+import org.cp.semaphores.tree.TurtleFractalTree;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -74,16 +75,20 @@ public class CPSemaphore {
         final Integer rounds = Integer.valueOf(properties.getProperty("fractal.iterations"));
         final Integer permits = Integer.valueOf(properties.getProperty("fractal.permits"));
         final Integer angle = Integer.valueOf(properties.getProperty("fractal.angle"));
-        final Semaphore semaphore = new Semaphore(permits);
+        final Integer step = Integer.valueOf(properties.getProperty("fractal.step"));
+        final Boolean swapAngle = Boolean.valueOf(properties.getProperty("fractal.swapAngle"));
+        final Semaphore semaphore = new FSemaphore(permits);
 
-        arrayLifoQueue.add(new FractalPath(new FractalVariable(this.fractalConfiguration.getAxiom().getSymbol())));
+        arrayLifoQueue.add(this.fractalConfiguration.getAxiom());
 
         for (int i = 0 ; i < permits ; i++) {
             runnables.add(new CFPSemaphore(arrayLifoQueue, this.fractalConfiguration).setSemaphore(semaphore)
                                                                                      .setRounds(rounds));
         }
-        runnables.add(new DFPSemaphore(arrayLifoQueue, new FractalTree(permits * rounds, angle)).setSemaphore(semaphore)
-                                                                                                .setRounds(rounds));
+        runnables
+                .add(new DFPSemaphore(arrayLifoQueue, new TurtleFractalTree(step, angle, swapAngle))
+                        .setSemaphore(semaphore)
+                        .setRounds(permits * rounds));
 
         return runnables;
     }
@@ -91,6 +96,7 @@ public class CPSemaphore {
     private FractalConfiguration initFractalConfiguration(final Properties properties) {
         return FractalConfiguration.newFractalConfiguration(
                 properties.getProperty("fractal.axiom").trim(),
+                properties.getProperty("fractal.variables").trim().split(","),
                 properties.getProperty("fractal.constants").trim().split(","),
                 properties.getProperty("fractal.rules").trim().split(",")
         );
