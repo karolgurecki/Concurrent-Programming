@@ -6,7 +6,6 @@ import org.cp.semaphores.fractal.path.FractalPath;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Stack;
 
 /**
  * @author kornicameister
@@ -21,8 +20,6 @@ public class TurtleFractalTree
     private       double  angle;
     private       int     step;
     private       Turtle  turtle;
-    private       State   state;
-    private Stack<State> memory = new Stack<>();
 
     public TurtleFractalTree(final int step, final Integer angle, final boolean swapAngle) {
         super("Fractal", 3000, 3000);
@@ -65,42 +62,6 @@ public class TurtleFractalTree
         }
         if (this.swapAngle) {
             this.angle *= -1;
-        }
-    }
-
-    private void pushState() {
-        memory.push(state);
-    }
-
-    private void popState() {
-        state = memory.lastElement();
-        this.turtle.setX(this.state.getX());
-        this.turtle.setY(this.state.getY());
-        this.angle = this.state.getAngle();
-        memory.pop();
-    }
-
-    class State {
-        private double x;
-        private double y;
-        private double angle;
-
-        public State(double x, double y, double angle) {
-            this.x = x;
-            this.y = y;
-            this.angle = angle;
-        }
-
-        public double getX() {
-            return x;
-        }
-
-        public double getY() {
-            return y;
-        }
-
-        public double getAngle() {
-            return angle;
         }
     }
 }
