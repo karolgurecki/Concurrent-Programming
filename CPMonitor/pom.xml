@@ -11,5 +11,43 @@
     <version>1.0-SNAPSHOT</version>
     <artifactId>CPMonitor</artifactId>
 
+    <properties>
+        <module.name>CPMonitor</module.name>
+    </properties>
+
+
+    <build>
+        <finalName>${module.name}</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.2.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <mainClass>org.cp.monitor.CPMonitor</mainClass>
+                    <arguments>
+                        <argument>-p</argument>
+                        <argument>
+                            G:/Projects/Concurrent-Programming/CPMonitor/src/main/resources/cpm.properties
+                        </argument>
+                    </arguments>
+                </configuration>
+            </plugin>
+        </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+    </build>
+
 
 </project>

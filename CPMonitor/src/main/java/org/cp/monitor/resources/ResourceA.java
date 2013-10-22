@@ -5,9 +5,9 @@ package org.cp.monitor.resources;
  * Version: 0.01
  * Since: 0.01
  */
-public class ResourceA extends Recource {
+public class ResourceA extends Resource {
 
-    public ResourceA(int number) {
+    public ResourceA(final Integer number) {
         super(number);
     }
 
