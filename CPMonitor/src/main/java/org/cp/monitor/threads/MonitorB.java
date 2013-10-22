@@ -14,19 +14,23 @@ public class MonitorB extends MonitorRunnable  {
 
     ResourceB resourceB;
 
+    public MonitorB(final Integer number) {
+        super(number);
+    }
+
     @Override
     public void run() {
         while (roundNumber <= roundsAmount) {
             try {
-                logger.info("Trying to acquire resource");
+                logger.info(String.format("%d - Trying to acquire resource",number));
 
                 resourceB = RESOURCE_B_RESOURCES_POOL.acquireResource();
 
-                logger.info(String.format("Round %d: I acquire %s",roundNumber,resourceB));
+                logger.info(String.format("%d - Round %d: I acquire %s",number,roundNumber,resourceB));
 
                 RESOURCE_B_RESOURCES_POOL.releaseResource(resourceB);
 
-                logger.info("Released resource");
+                logger.info(String.format("%d - Released resource",number));
 
             } catch (Exception e) {
                 logger.error(e);

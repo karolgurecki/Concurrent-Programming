@@ -21,7 +21,10 @@ public abstract class MonitorRunnable implements Runnable {
 
     protected int roundNumber=1;
 
-    public MonitorRunnable(){
+    protected int number;
 
+    public MonitorRunnable(final Integer number){
+        this.number=number;
     }
+
 }

@@ -10,6 +10,7 @@ import org.cp.monitor.threads.MonitorB;
 import org.cp.monitor.threads.MonitorRunnable;
 
 import java.io.FileReader;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -79,12 +80,15 @@ public class CPMonitor {
 
     }
 
-    private static void createThreads(String clazz, int numberOfThreads) throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException, ClassNotFoundException {
+    private static void createThreads(String strClazz, int numberOfThreads) throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException, ClassNotFoundException {
 
-        Class xla=Class.forName(clazz);
+        Class<MonitorRunnable> clazz=Class.forName(strClazz);
+
+        Constructor<MonitorRunnable> constructor;
+        constructor = clazz.getConstructor(Integer.class);
 
         for(int i=0;i<numberOfThreads;i++){
-            monitors.add((MonitorRunnable) xla.newInstance());
+            monitors.add(constructor.newInstance(i));
         }
     }
 }
