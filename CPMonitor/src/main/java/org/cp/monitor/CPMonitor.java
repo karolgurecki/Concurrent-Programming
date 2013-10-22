@@ -82,13 +82,12 @@ public class CPMonitor {
 
     private static void createThreads(String strClazz, int numberOfThreads) throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException, ClassNotFoundException {
 
-        Class<MonitorRunnable> clazz=Class.forName(strClazz);
+        Class clazz=Class.forName(strClazz);
 
-        Constructor<MonitorRunnable> constructor;
-        constructor = clazz.getConstructor(Integer.class);
+        Constructor constructor=clazz.getConstructor(Integer.class);
 
         for(int i=0;i<numberOfThreads;i++){
-            monitors.add(constructor.newInstance(i));
+            monitors.add((MonitorRunnable) constructor.newInstance(i));
         }
     }
 }
