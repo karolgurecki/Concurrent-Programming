@@ -45,21 +45,18 @@ public class ResourcesPool<R extends Resource> {
     public R acquireResource() throws Exception {
         lock.lock();
         try {
-            while (true) {
-                while (num_resources <= 0)
-                    poolAvailable.await();
+            while (num_resources <= 0)
+                poolAvailable.await();
 
-                --num_resources;
+            --num_resources;
 
-                int i = 0;
-                while (resourcePool.get(i).isLocked() && i <= resourcePool.size())
-                    i++;
+            int i = 0;
+            while (resourcePool.get(i).isLocked() && i <= resourcePool.size())
+                i++;
 
-                //if (i != resourcePool.size()) {
-                    resourcePool.get(i).setLocked(true);
-                    return resourcePool.get(i);
-                //}
-            }
+            resourcePool.get(i).setLocked(true);
+            return resourcePool.get(i);
+
         } finally {
             lock.unlock();
         }
