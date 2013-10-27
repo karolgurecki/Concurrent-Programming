@@ -28,7 +28,10 @@ public class MonitorA extends MonitorRunnable {
                 logger.info(String.format("%d - Round %d: I acquire %s",number, roundNumber, resourceA));
 
                 RESOURCE_A_RESOURCES_POOL.releaseResource(resourceA);
-                logger.info(String.format("%d - Released resource",number));
+
+                logger.info(String.format("%d - Released resource. Go to sleep",number));
+
+                Thread.sleep(sleepTime);
             } catch (Exception e) {
                 logger.error(e);
             }

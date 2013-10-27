@@ -41,7 +41,7 @@ public class CPMonitor {
     private static void run() throws InterruptedException {
         final ExecutorService executorService = Executors.newCachedThreadPool();
         for (final Runnable runnable : monitors) {
-            LOGGER.info(String.format("Bootstrapped with thread=%s", executorService.submit(runnable)));
+            LOGGER.info(String.format(" Bootstrapped with thread=%s", executorService.submit(runnable)));
         }
         executorService.shutdown();
         executorService.awaitTermination(1, TimeUnit.MINUTES);
@@ -63,9 +63,12 @@ public class CPMonitor {
                     MonitorRunnable.RESOURCE_B_RESOURCES_POOL=new ResourcesPool<>(ResourceB.class,
                             Integer.parseInt(properties.getProperty("resourcesB.amount")));
                     MonitorRunnable.roundsAmount= Integer.parseInt(properties.getProperty("rounds.amount"));
+                    MonitorRunnable.sleepTime=Long.parseLong(properties.getProperty("sleep.time"));
+
                     createThreads(MonitorA.class.getName(),Integer.parseInt(properties.getProperty("monitorA.amount")));
                     createThreads(MonitorB.class.getName(),Integer.parseInt(properties.getProperty("monitorB.amount")));
                     createThreads(MonitorAB.class.getName(),Integer.parseInt(properties.getProperty("monitorAB.amount")));
+
                     LOGGER.info("Program configured");
                 } catch (Exception e) {
                     throw new RuntimeException(e);

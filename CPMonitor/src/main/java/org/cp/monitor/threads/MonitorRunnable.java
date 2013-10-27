@@ -19,6 +19,8 @@ public abstract class MonitorRunnable implements Runnable {
 
     public static int roundsAmount;
 
+    public static long sleepTime;
+
     protected int roundNumber=1;
 
     protected int number;

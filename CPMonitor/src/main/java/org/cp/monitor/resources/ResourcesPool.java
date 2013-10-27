@@ -17,18 +17,18 @@ public class ResourcesPool<R extends Resource> {
     private final Condition poolAvailable = lock.newCondition();
     private int num_resources;
     private final int max_num_resources;
-    private final List<R> resourcePool= new ArrayList<>();
+    private final List<R> resourcePool = new ArrayList<>();
     private final Constructor<R> resourceConstructor;
 
 
-    private R createResource(final int number) throws Exception{
+    private R createResource(final int number) throws Exception {
         R resource;
 
-            resource = resourceConstructor.newInstance(number);
+        resource = resourceConstructor.newInstance(number);
 
-            if (resource == null)
-                throw new Exception(String.format("%s number %d can't be created",
-                        resourceConstructor.getClass().getSimpleName(), number));
+        if (resource == null)
+            throw new Exception(String.format("%s number %d can't be created",
+                    resourceConstructor.getClass().getSimpleName(), number));
 
         return resource;
     }
@@ -38,27 +38,28 @@ public class ResourcesPool<R extends Resource> {
         this.max_num_resources = num_resource_pools;
         this.num_resources = max_num_resources;
 
-        for(int i=0;i<max_num_resources;i++)
+        for (int i = 0; i < max_num_resources; i++)
             resourcePool.add(createResource(i));
     }
 
     public R acquireResource() throws Exception {
         lock.lock();
         try {
-            while (num_resources <= 0)
-                poolAvailable.await();
+            while (true) {
+                while (num_resources <= 0)
+                    poolAvailable.await();
 
-            --num_resources;
+                --num_resources;
 
-            int i=0;
-            while (resourcePool.get(i).isLocked() && i<=resourcePool.size())
-                i++;
+                int i = 0;
+                while (resourcePool.get(i).isLocked() && i <= resourcePool.size())
+                    i++;
 
-            if(i!= resourcePool.size()){
-                resourcePool.get(i).setLocked(true);
-                return resourcePool.get(i);
+                //if (i != resourcePool.size()) {
+                    resourcePool.get(i).setLocked(true);
+                    return resourcePool.get(i);
+                //}
             }
-            return null;
         } finally {
             lock.unlock();
         }
@@ -68,7 +69,7 @@ public class ResourcesPool<R extends Resource> {
         lock.lock();
         try {
             // check to ensure release does not occur before acquire
-            if(num_resources >= max_num_resources)
+            if (num_resources >= max_num_resources)
                 return;
 
             int resourceIndex = resource.getNumber();

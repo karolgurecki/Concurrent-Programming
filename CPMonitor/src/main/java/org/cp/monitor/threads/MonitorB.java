@@ -30,8 +30,9 @@ public class MonitorB extends MonitorRunnable  {
 
                 RESOURCE_B_RESOURCES_POOL.releaseResource(resourceB);
 
-                logger.info(String.format("%d - Released resource",number));
+                logger.info(String.format("%d - Released resource. Go to sleep",number));
 
+                Thread.sleep(sleepTime);
             } catch (Exception e) {
                 logger.error(e);
             }
