@@ -1,8 +1,7 @@
 package org.cp.monitor.resources;
 
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.ArrayDeque;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -17,7 +16,7 @@ public class ResourcesPool<R extends Resource> {
     private final Condition poolAvailable = lock.newCondition();
     private int num_resources;
     private final int max_num_resources;
-    private final List<R> resourcePool = new ArrayList<>();
+    private final ArrayDeque<R> resourcePool = new ArrayDeque<>();
     private final Constructor<R> resourceConstructor;
 
 
@@ -50,12 +49,10 @@ public class ResourcesPool<R extends Resource> {
 
             --num_resources;
 
-            int i = 0;
-            while (resourcePool.get(i).isLocked() && i <= resourcePool.size())
-                i++;
+            R r = resourcePool.getFirst();
 
-            resourcePool.get(i).setLocked(true);
-            return resourcePool.get(i);
+            r.setLocked(true);
+            return r;
 
         } finally {
             lock.unlock();
@@ -72,7 +69,9 @@ public class ResourcesPool<R extends Resource> {
             int resourceIndex = resource.getNumber();
             ++num_resources;
 
-            resourcePool.get(resourceIndex).setLocked(false);
+            resource.setLocked(false);
+            resourcePool.addLast(resource);
+
             poolAvailable.signal();
         } finally {
             lock.unlock();
