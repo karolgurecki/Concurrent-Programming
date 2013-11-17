@@ -58,39 +58,44 @@ public class RServer
                 this.getNextToInvestigate();
             }
             synchronized (this) {
-                final Queue<Client> clients = this.queueMap.get(this.currentlyInvestigates);
-                if (clients != null) {
-                    final Client peek = clients.peek();
-                    if (peek == null) {
-//                        try {
-//                            this.wait();
-//                        } catch (InterruptedException e) {
-//                            LOGGER.error(e);
-//                        }
-                    } else {
-                        switch (this.currentlyInvestigates) {
-                            case SERVICE_A:
-                            case SERVICE_B:
-                                peek.msg(this.resources.get(this.currentlyInvestigates).poll());
-                                break;
-                            case SERVICE_AB:
-                                peek.msg(this.resources.get(SERVICE_A).poll(), this.resources.get(SERVICE_B).poll());
-                                break;
-                        }
-                        if (!this.hasMoreResource()) {
-                            return;
-                        }
+                try {
+                    final Queue<Client> clients = this.queueMap.get(this.currentlyInvestigates);
+                    if (clients.size() == 0) {
                         this.getNextToInvestigate();
-                        this.notifyAll();
+                        Thread.sleep(100);
+                    } else {
+                        final Client targetOfRendezvous = clients.poll();
+                        if (targetOfRendezvous != null) {
+                            switch (this.currentlyInvestigates) {
+                                case SERVICE_A:
+                                case SERVICE_B:
+                                    final Resource resource = this.resources.get(this.currentlyInvestigates).poll();
+                                    if (resource != null) {
+                                        targetOfRendezvous.msg(resource);
+                                    }
+                                    break;
+                                case SERVICE_AB: {
+                                    final Resource resourceA = this.resources.get(SERVICE_A).poll();
+                                    final Resource resourceB = this.resources.get(SERVICE_B).poll();
+                                    if (resourceA != null && resourceB != null) {
+                                        targetOfRendezvous.msg(resourceA, resourceB);
+                                    }
+                                }
+                                break;
+                            }
+                            this.getNextToInvestigate();
+                            Thread.sleep(100);
+                        } else {
+                            this.getNextToInvestigate();
+                            Thread.sleep(100);
+                        }
                     }
+                } catch (Exception exception) {
+                    LOGGER.warn(exception.getMessage());
+                    return;
                 }
-                this.getNextToInvestigate();
             }
         }
-    }
-
-    private boolean hasMoreResource() {
-        return this.resources.get(SERVICE_A).size() > 0 && this.resources.get(SERVICE_B).size() > 0;
     }
 
     @Override
@@ -108,6 +113,28 @@ public class RServer
         if (clients.contains(c)) {
             LOGGER.warn(String.format("Client %s not accepted already waiting", c));
             return false;
+        } else {
+            final Resource[] cResources = c.getResources();
+            final String cReceiverCode = c.getReceiverCode();
+            if (cResources != null) {
+                for (final Resource resource : cResources) {
+                    switch (cReceiverCode) {
+                        case SERVICE_A:
+                            this.resources.get(SERVICE_A).add(resource);
+                            break;
+                        case SERVICE_B:
+                            this.resources.get(SERVICE_B).add(resource);
+                            break;
+                        case SERVICE_AB:
+                            if (resource instanceof ResourceA) {
+                                this.resources.get(SERVICE_A).add(resource);
+                            } else {
+                                this.resources.get(SERVICE_B).add(resource);
+                            }
+                            break;
+                    }
+                }
+            }
         }
         LOGGER.debug(String.format("Client %s accepted and waits...", c));
         return clients != null && clients.add(c);

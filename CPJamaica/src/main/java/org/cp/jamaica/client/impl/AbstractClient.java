@@ -15,12 +15,13 @@ import java.util.Arrays;
  */
 abstract class AbstractClient
         implements Client {
-    private static int COUNTER = 0;
+    public static final int TIMEOUT = 100;
+    private static      int COUNTER = 0;
     protected final RServer server;
     private final Logger LOGGER = Logger.getLogger(AbstractClient.this.getClass());
     protected String receiverCode;
-    protected int     number = COUNTER++;
-    private   boolean overMe = false;
+    protected int number = COUNTER++;
+    private Resource[] resources;
 
     protected AbstractClient(final RServer server) {
         this.server = server;
@@ -29,26 +30,43 @@ abstract class AbstractClient
     @Override
     public void run() {
         while (true) {
-            synchronized (this.server) {
-                if (this.overMe) {
-                    LOGGER.info("No resources left...closing..");
+            synchronized (this) {
+                try {
+                    this.server.call(this.receiverCode, this);
+                    this.doWait();
+                    this.process();
+                } catch (Exception exception) {
+                    LOGGER.error(String.format("%s terminated by the exception", this), exception);
+                    this.resources = null;
                     return;
-                }
-                final boolean accepted = this.server.call(this.receiverCode, this);
-                if (accepted) {
-                    LOGGER.info("I have been accepted");
-//                    this.server.notifyAll();
-                } else {
-                    LOGGER.warn("Need to wait");
-//                    try {
-//                        this.server.wait();
-//                    } catch (InterruptedException e) {
-//                        AbstractClient.this.LOGGER.error("Error when waiting", e);
-//                        return;
-//                    }
                 }
             }
         }
+    }
+
+    private synchronized void process() throws InterruptedException {
+        LOGGER.trace(String.format("%s is processing resources = %s", this, Arrays.toString(this.resources)));
+        Thread.sleep(TIMEOUT);
+        this.notifyAll();
+    }
+
+    private synchronized void doWait() throws InterruptedException {
+        if (this.resources == null) {
+            LOGGER.trace(String.format("%s is waiting for rendezvous", this));
+            this.wait();
+        }
+    }
+
+    @Override
+    public synchronized void msg(final Resource... resources) {
+        LOGGER.info(String.format("%s received resources=%s", this, Arrays.toString(resources)));
+        this.resources = resources;
+        this.notifyAll();
+    }
+
+    @Override
+    public String getReceiverCode() {
+        return this.receiverCode;
     }
 
     @Override
@@ -57,13 +75,10 @@ abstract class AbstractClient
         return this;
     }
 
-    @Override
-    public synchronized void msg(final Resource... resources) {
-        if (resources == null || resources.length == 0) {
-            this.overMe = true;
-        }
-        LOGGER.info(Arrays.toString(resources));
-        this.server.notifyAll();
+    @Override public Resource[] getResources() {
+        final Resource[] resources1 = this.resources;
+        this.resources = null;
+        return resources1;
     }
 
     @Override

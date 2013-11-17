@@ -12,7 +12,11 @@ import org.cp.monitor.resources.Resource;
 public interface Client
         extends Runnable {
 
+    void msg(Resource... resources);
+
+    String getReceiverCode();
+
     Client setReceiverCode(final String receiverCode);
 
-    void msg(Resource... resources);
+    Resource[] getResources();
 }
