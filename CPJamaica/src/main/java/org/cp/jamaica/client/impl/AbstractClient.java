@@ -32,9 +32,13 @@ abstract class AbstractClient
         while (true) {
             synchronized (this) {
                 try {
-                    this.server.call(this.receiverCode, this);
-                    this.doWait();
-                    this.process();
+                    if (this.server.call(this.receiverCode, this)) {
+                        this.doWait();
+                        this.process();
+                    } else {
+                        Thread.sleep(10);
+                        this.notify();
+                    }
                 } catch (Exception exception) {
                     LOGGER.error(String.format("%s terminated by the exception", this), exception);
                     this.resources = null;
