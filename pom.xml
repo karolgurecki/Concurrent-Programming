@@ -15,6 +15,7 @@
         <module>CPSemaphore</module>
         <module>CPMonitor</module>
         <module>CPJamaica</module>
+        <module>CPLast</module>
     </modules>
 
     <properties>
