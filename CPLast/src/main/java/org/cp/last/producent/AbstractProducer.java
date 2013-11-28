@@ -6,7 +6,6 @@ import org.cp.last.products.Matches;
 import org.cp.last.products.ProductPool;
 import org.cp.last.products.Tobacco;
 import org.cp.monitor.resources.Resource;
-import org.cp.monitor.resources.ResourcesPool;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -21,94 +20,135 @@ public class AbstractProducer implements Runnable {
 
     protected Logger LOGGER = Logger.getLogger(this.getClass().getSimpleName());
 
-    protected static ProductPool<Tobacco> tobaccoPoll;
+    public static ProductPool<Tobacco> tobaccoPoll;
 
-    protected static ProductPool<Matches> matchesPool;
+    public static ProductPool<Matches> matchesPool;
 
-    protected static ProductPool<Cigarette> cigarettePool;
+    public static ProductPool<Cigarette> cigarettePool;
 
-    protected Queue<Tobacco> myToccaco;
+    protected Queue<Tobacco> myTobacco;
 
     protected Queue<Matches> myMatches;
 
     protected Queue<Cigarette> myCigarettes;
 
-    protected ResourcesPool productPool;
-
-    protected Class<Resource> product;
-
-    protected static int howMuchToProduce;
+    protected Class product;
 
     protected static int sleepAmount;
+
+    public static int stock;
 
     protected int produced;
     protected Random RANDOM = new Random();
 
-    public AbstractProducer(Class _product, int _warehouseCapacity, int _howMuchToProduce, int _sleepAmount) throws Exception {
-        tobaccoPoll = new ProductPool<>(Tobacco.class, _warehouseCapacity);
-        matchesPool = new ProductPool<>(Matches.class, _warehouseCapacity);
-        cigarettePool = new ProductPool<>(Cigarette.class, _warehouseCapacity);
-
-        if (Tobacco.class.equals(_product)) {
-            productPool = tobaccoPoll;
-        } else if (Matches.class.equals(_product)) {
-            productPool = matchesPool;
-        } else {
-            productPool = cigarettePool;
-        }
+    public AbstractProducer(Class _product, int _sleepAmount) throws Exception {
 
         sleepAmount = _sleepAmount;
-        howMuchToProduce = _howMuchToProduce;
         this.produced = 0;
         product = _product;
 
         myCigarettes = new LinkedList<>();
         myMatches = new LinkedList<>();
-        myToccaco = new LinkedList<>();
+        myTobacco = new LinkedList<>();
+
+        if (product != null) {
+
+            if (Tobacco.class.equals(product)) {
+                myTobacco.add(new Tobacco());
+            } else if (Matches.class.equals(product)) {
+                myMatches.add(new Matches());
+            } else {
+                myCigarettes.add(new Cigarette());
+            }
+        }
     }
 
     @Override
     public void run() {
-        LOGGER.info(String.format("Producing a %s", product.getSimpleName()));
+
         Resource productTemp;
         try {
-            while (produced < howMuchToProduce) {
+            while (true) {
+                LOGGER.info(String.format("Producing a %s", product.getSimpleName()));
                 //productTemp = null;
-                productTemp = this.product.newInstance();
+                for (int i = 0; i < stock; i++) {
+                    productTemp = (Resource) this.product.newInstance();
 
-                if (product != null) {
-                    productPool.releaseResource(productTemp);
+                    if (product != null) {
+                        if (Tobacco.class.equals(product)) {
+                            tobaccoPoll.produceProduct((Tobacco) productTemp);
+                        } else if (Matches.class.equals(product)) {
+                            matchesPool.produceProduct((Matches) productTemp);
+                        } else {
+                            cigarettePool.produceProduct((Cigarette) productTemp);
+                        }
+                        LOGGER.info(String.format("Produced %s", productTemp.getClass().getSimpleName()));
+                    }
+                }
+                boolean acquired = false;
+                while (!acquired) {
+                    switch (RANDOM.nextInt(3)) {
+                        case 0:
+                            if (!Tobacco.class.equals(product)) {
+                                LOGGER.info("Trying to acquire a tobacco");
+                                myTobacco.add(tobaccoPoll.acquireProduct());
+                                LOGGER.info(String.format("I acquired %s", myTobacco.peek()));
+                                acquired = true;
+                            }
+                            break;
+                        case 1:
+                            if (!Matches.class.equals(product)) {
+                                LOGGER.info("Trying to acquire a matches");
+                                myMatches.add(matchesPool.acquireProduct());
+                                LOGGER.info(String.format("I acquired %s", myMatches.peek()));
+                                acquired = true;
+                            }
+                            break;
+                        default:
+                            if (!Cigarette.class.equals(product)) {
+                                LOGGER.info("Trying to acquire a cigarette");
+                                myCigarettes.add(cigarettePool.acquireProduct());
+                                LOGGER.info(String.format("I acquired %s", myCigarettes.peek()));
+                                acquired = true;
+                            }
+                            break;
+                    }
                 }
 
-                switch (RANDOM.nextInt(2)) {
-                    case 0:
-                        myToccaco.add((Tobacco) tobaccoPoll.acquireResource());
-                        LOGGER.info(String.format("I acquired tobacco %s", myToccaco.peek()));
-                        break;
-                    case 1:
-                        myMatches.add((Matches) matchesPool.acquireResource());
-                        LOGGER.info(String.format("I acquired matches %s", myMatches.peek()));
-                        break;
-                    default:
-                        myCigarettes.add((Cigarette) cigarettePool.acquireResource());
-                        LOGGER.info(String.format("I acquired cigarette %s", myCigarettes.peek()));
-                        break;
+                LOGGER.debug(String.format("myTobacco.size %d, myCigarettes.size %d, myMatches.size %d",
+                        myTobacco.size(), myCigarettes.size(), myMatches.size()));
 
+                if (!myCigarettes.isEmpty() && !myTobacco.isEmpty() && !myMatches.isEmpty()) {
+                    LOGGER.info(String.format("Start smoking %d with\n%s\n%s\n%s", produced++, myCigarettes.poll(), myTobacco.poll(), myMatches.poll()));
+
+                    if (product != null) {
+                        if (Tobacco.class.equals(product)) {
+                            myTobacco.add(new Tobacco());
+                        } else if (Matches.class.equals(product)) {
+                            myMatches.add(new Matches());
+                        } else {
+                            myCigarettes.add(new Cigarette());
+                        }
+                    }
                 }
-
-                if (!myCigarettes.isEmpty() && !myToccaco.isEmpty() && !myMatches.isEmpty()) {
-                    LOGGER.info(String.format("Start smoking with\n%s\n%s\n%s", myCigarettes.poll(), myToccaco.poll(), myMatches.poll()));
-                    produced++;
-                }
-
-
                 LOGGER.info("Go to sleep");
                 Thread.sleep(sleepAmount);
-
             }
         } catch (Exception e) {
-            LOGGER.error(e);
+            LOGGER.error(exceptionToString(e));
             System.exit(-1);
         }
+    }
+
+    private String exceptionToString(Exception e) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(e.getMessage());
+
+        for (StackTraceElement element : e.getStackTrace()) {
+            builder.append("\n");
+            builder.append(element);
+        }
+
+        return builder.toString();
     }
 }

@@ -5,6 +5,10 @@ import org.cp.last.producent.AbstractProducer;
 import org.cp.last.producent.impl.CigaretteProducer;
 import org.cp.last.producent.impl.MatchesProducer;
 import org.cp.last.producent.impl.TobaccoProducer;
+import org.cp.last.products.Cigarette;
+import org.cp.last.products.Matches;
+import org.cp.last.products.ProductPool;
+import org.cp.last.products.Tobacco;
 
 import java.io.FileReader;
 import java.lang.reflect.Constructor;
@@ -15,6 +19,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -38,7 +43,8 @@ public class Launcher {
     private static void run() throws InterruptedException {
         final ExecutorService executorService = Executors.newCachedThreadPool();
         for (final Runnable runnable : producers) {
-            LOGGER.info(String.format(" Bootstrapped with thread=%s", executorService.submit(runnable)));
+            Future future = executorService.submit(runnable);
+            LOGGER.debug(String.format(" Bootstrapped with thread=%s", future));
         }
         executorService.shutdown();
         executorService.awaitTermination(1, TimeUnit.MINUTES);
@@ -60,12 +66,16 @@ public class Launcher {
                     int matchesProducerNumber = Integer.parseInt(properties.getProperty("matches.producer.amount"));
                     int tobaccoProducerNumber = Integer.parseInt(properties.getProperty("tobacco.producer.amount"));
                     int warehouseCapacity = Integer.parseInt(properties.getProperty("warehouse.capacity"));
-                    int amountToDo = Integer.parseInt(properties.getProperty("rounds.amount"));
                     int sleetAmount = Integer.parseInt(properties.getProperty("sleep.time"));
 
-                    createThreads(TobaccoProducer.class.getName(), tobaccoProducerNumber, warehouseCapacity, amountToDo, sleetAmount);
-                    createThreads(MatchesProducer.class.getName(), matchesProducerNumber, warehouseCapacity, amountToDo, sleetAmount);
-                    createThreads(CigaretteProducer.class.getName(), cigaretteProducerNumber, warehouseCapacity, amountToDo, sleetAmount);
+                    AbstractProducer.stock = Integer.parseInt(properties.getProperty("stock.amount"));
+                    AbstractProducer.tobaccoPoll = new ProductPool<>(Tobacco.class, warehouseCapacity);
+                    AbstractProducer.matchesPool = new ProductPool<>(Matches.class, warehouseCapacity);
+                    AbstractProducer.cigarettePool = new ProductPool<>(Cigarette.class, warehouseCapacity);
+
+                    createThreads(TobaccoProducer.class.getName(), tobaccoProducerNumber, sleetAmount);
+                    createThreads(MatchesProducer.class.getName(), matchesProducerNumber, sleetAmount);
+                    createThreads(CigaretteProducer.class.getName(), cigaretteProducerNumber, sleetAmount);
 
                     LOGGER.info("Program configured");
                 } catch (Exception e) {
@@ -81,14 +91,14 @@ public class Launcher {
 
     }
 
-    private static void createThreads(String strClazz, int numberOfThreads, int warehouseCapacity, int howMuchToProduce, int sleepAmount) throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException, ClassNotFoundException {
+    private static void createThreads(String strClazz, int numberOfThreads, int sleepAmount) throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException, ClassNotFoundException {
 
         Class clazz = Class.forName(strClazz);
 
-        Constructor constructor = clazz.getConstructor(Integer.class, Integer.class, Integer.class);
+        Constructor constructor = clazz.getConstructor(Integer.class);
 
         for (int i = 0; i < numberOfThreads; i++) {
-            producers.add((AbstractProducer) constructor.newInstance(warehouseCapacity, howMuchToProduce, sleepAmount));
+            producers.add((AbstractProducer) constructor.newInstance(sleepAmount));
         }
     }
 }

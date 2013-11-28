@@ -10,7 +10,7 @@ import org.cp.last.products.Tobacco;
  */
 public class TobaccoProducer extends AbstractProducer {
 
-    public TobaccoProducer(Integer warehouseCapacity, Integer howMuchToProduce, Integer sleepAmount) throws Exception {
-        super(Tobacco.class, warehouseCapacity, howMuchToProduce, sleepAmount);
+    public TobaccoProducer(Integer sleepAmount) throws Exception {
+        super(Tobacco.class, sleepAmount);
     }
 }

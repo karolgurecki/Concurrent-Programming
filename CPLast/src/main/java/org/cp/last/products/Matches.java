@@ -10,15 +10,7 @@ import org.cp.monitor.resources.Resource;
 public class Matches extends Resource {
     private static int totalNumber = 0;
 
-    public Matches(Integer number) {
-        super(totalNumber);
-
-        totalNumber++;
-    }
-
     public Matches() {
-        super(totalNumber);
-
-        totalNumber++;
+        super(++totalNumber);
     }
 }

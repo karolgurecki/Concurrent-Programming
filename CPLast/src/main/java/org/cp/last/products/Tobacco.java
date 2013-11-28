@@ -11,14 +11,7 @@ public class Tobacco extends Resource {
     private static int totalNumber = 0;
 
     public Tobacco() {
-        super(totalNumber);
-
-        totalNumber++;
+        super(++totalNumber);
     }
 
-    public Tobacco(Integer number) {
-        super(totalNumber);
-
-        totalNumber++;
-    }
 }

@@ -10,7 +10,7 @@ import org.cp.last.products.Matches;
  */
 public class MatchesProducer extends AbstractProducer {
 
-    public MatchesProducer(Integer warehouseCapacity, Integer howMuchToProduce, Integer sleepAmount) throws Exception {
-        super(Matches.class, warehouseCapacity, howMuchToProduce, sleepAmount);
+    public MatchesProducer(Integer sleepAmount) throws Exception {
+        super(Matches.class, sleepAmount);
     }
 }
