@@ -3,6 +3,7 @@ package org.cp.last.producent;
 import org.apache.log4j.Logger;
 import org.cp.last.products.Cigarette;
 import org.cp.last.products.Matches;
+import org.cp.last.products.ProductPool;
 import org.cp.last.products.Tobacco;
 import org.cp.monitor.resources.Resource;
 import org.cp.monitor.resources.ResourcesPool;
@@ -20,11 +21,11 @@ public class AbstractProducer implements Runnable {
 
     protected Logger LOGGER = Logger.getLogger(this.getClass().getSimpleName());
 
-    protected static ResourcesPool<Tobacco> tobaccoPoll;
+    protected static ProductPool<Tobacco> tobaccoPoll;
 
-    protected static ResourcesPool<Matches> matchesPool;
+    protected static ProductPool<Matches> matchesPool;
 
-    protected static ResourcesPool<Cigarette> cigarettePool;
+    protected static ProductPool<Cigarette> cigarettePool;
 
     protected Queue<Tobacco> myToccaco;
 
@@ -43,23 +44,23 @@ public class AbstractProducer implements Runnable {
     protected int produced;
     protected Random RANDOM = new Random();
 
-    public AbstractProducer(Class product, int warehouseCapacity, int howMuchToProduce, int sleepAmount) throws Exception {
-        tobaccoPoll = new ResourcesPool<>(Tobacco.class, warehouseCapacity);
-        matchesPool = new ResourcesPool<>(Matches.class, warehouseCapacity);
-        cigarettePool = new ResourcesPool<>(Cigarette.class, warehouseCapacity);
+    public AbstractProducer(Class _product, int _warehouseCapacity, int _howMuchToProduce, int _sleepAmount) throws Exception {
+        tobaccoPoll = new ProductPool<>(Tobacco.class, _warehouseCapacity);
+        matchesPool = new ProductPool<>(Matches.class, _warehouseCapacity);
+        cigarettePool = new ProductPool<>(Cigarette.class, _warehouseCapacity);
 
-        if (Tobacco.class.equals(product)) {
+        if (Tobacco.class.equals(_product)) {
             productPool = tobaccoPoll;
-        } else if (Matches.class.equals(product)) {
+        } else if (Matches.class.equals(_product)) {
             productPool = matchesPool;
         } else {
             productPool = cigarettePool;
         }
 
-        this.sleepAmount = sleepAmount;
-        this.howMuchToProduce = howMuchToProduce;
+        sleepAmount = _sleepAmount;
+        howMuchToProduce = _howMuchToProduce;
         this.produced = 0;
-        this.product = product;
+        product = _product;
 
         myCigarettes = new LinkedList<>();
         myMatches = new LinkedList<>();
@@ -81,15 +82,15 @@ public class AbstractProducer implements Runnable {
 
                 switch (RANDOM.nextInt(2)) {
                     case 0:
-                        myToccaco.add(tobaccoPoll.acquireResource());
+                        myToccaco.add((Tobacco) tobaccoPoll.acquireResource());
                         LOGGER.info(String.format("I acquired tobacco %s", myToccaco.peek()));
                         break;
                     case 1:
-                        myMatches.add(matchesPool.acquireResource());
+                        myMatches.add((Matches) matchesPool.acquireResource());
                         LOGGER.info(String.format("I acquired matches %s", myMatches.peek()));
                         break;
                     default:
-                        myCigarettes.add(cigarettePool.acquireResource());
+                        myCigarettes.add((Cigarette) cigarettePool.acquireResource());
                         LOGGER.info(String.format("I acquired cigarette %s", myCigarettes.peek()));
                         break;
 

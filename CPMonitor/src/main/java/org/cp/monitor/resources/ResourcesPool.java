@@ -12,20 +12,23 @@ import java.util.concurrent.locks.ReentrantLock;
  * Since: 0.01
  */
 public class ResourcesPool<R extends Resource> {
-    private final Lock      lock          = new ReentrantLock();
-    private final Condition poolAvailable = lock.newCondition();
-    private final int max_num_resources;
-    private final ArrayDeque<R> resourcePool = new ArrayDeque<>();
-    private final Constructor<R> resourceConstructor;
-    private       int            num_resources;
+    protected Lock lock = new ReentrantLock();
+    protected final Condition poolAvailable = lock.newCondition();
+    protected int max_num_resources;
+    protected final ArrayDeque<R> resourcePool = new ArrayDeque<>();
+    protected Constructor<R> resourceConstructor;
+    protected int num_resources;
 
+    public ResourcesPool() {
+
+    }
 
     public ResourcesPool(Class<R> resourceClass, int num_resource_pools) throws Exception {
         this.resourceConstructor = resourceClass.getDeclaredConstructor(Integer.class);
         this.max_num_resources = num_resource_pools;
         this.num_resources = max_num_resources;
 
-        for (int i = 0 ; i < max_num_resources ; i++) {
+        for (int i = 0; i < max_num_resources; i++) {
             resourcePool.add(createResource(i));
         }
     }
