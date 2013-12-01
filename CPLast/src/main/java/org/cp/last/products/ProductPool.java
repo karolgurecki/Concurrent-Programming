@@ -76,5 +76,9 @@ public class ProductPool<P extends Resource> {
                 max_num_products, productConstructor, num_products);
     }
 
+    public boolean isWarehouseFull() {
+        return num_products == max_num_products;
+    }
+
 
 }

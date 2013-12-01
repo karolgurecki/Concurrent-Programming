@@ -9,7 +9,6 @@ import org.cp.monitor.resources.Resource;
 
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.Random;
 
 /**
  * Created by: Nappa
@@ -39,7 +38,6 @@ public class AbstractProducer implements Runnable {
     public static int stock;
 
     protected int produced;
-    protected Random RANDOM = new Random();
 
     public AbstractProducer(Class _product, int _sleepAmount) throws Exception {
 
@@ -65,72 +63,13 @@ public class AbstractProducer implements Runnable {
 
     @Override
     public void run() {
-
-        Resource productTemp;
         try {
             while (true) {
-                LOGGER.info(String.format("Producing a %s", product.getSimpleName()));
-                //productTemp = null;
-                for (int i = 0; i < stock; i++) {
-                    productTemp = (Resource) this.product.newInstance();
-
-                    if (product != null) {
-                        if (Tobacco.class.equals(product)) {
-                            tobaccoPoll.produceProduct((Tobacco) productTemp);
-                        } else if (Matches.class.equals(product)) {
-                            matchesPool.produceProduct((Matches) productTemp);
-                        } else {
-                            cigarettePool.produceProduct((Cigarette) productTemp);
-                        }
-                        LOGGER.info(String.format("Produced %s", productTemp.getClass().getSimpleName()));
-                    }
-                }
-                boolean acquired = false;
-                while (!acquired) {
-                    switch (RANDOM.nextInt(3)) {
-                        case 0:
-                            if (!Tobacco.class.equals(product)) {
-                                LOGGER.info("Trying to acquire a tobacco");
-                                myTobacco.add(tobaccoPoll.acquireProduct());
-                                LOGGER.info(String.format("I acquired %s", myTobacco.peek()));
-                                acquired = true;
-                            }
-                            break;
-                        case 1:
-                            if (!Matches.class.equals(product)) {
-                                LOGGER.info("Trying to acquire a matches");
-                                myMatches.add(matchesPool.acquireProduct());
-                                LOGGER.info(String.format("I acquired %s", myMatches.peek()));
-                                acquired = true;
-                            }
-                            break;
-                        default:
-                            if (!Cigarette.class.equals(product)) {
-                                LOGGER.info("Trying to acquire a cigarette");
-                                myCigarettes.add(cigarettePool.acquireProduct());
-                                LOGGER.info(String.format("I acquired %s", myCigarettes.peek()));
-                                acquired = true;
-                            }
-                            break;
-                    }
-                }
-
+                produce();
+                acquire();
                 LOGGER.debug(String.format("myTobacco.size %d, myCigarettes.size %d, myMatches.size %d",
                         myTobacco.size(), myCigarettes.size(), myMatches.size()));
-
-                if (!myCigarettes.isEmpty() && !myTobacco.isEmpty() && !myMatches.isEmpty()) {
-                    LOGGER.info(String.format("Start smoking %d with\n%s\n%s\n%s", produced++, myCigarettes.poll(), myTobacco.poll(), myMatches.poll()));
-
-                    if (product != null) {
-                        if (Tobacco.class.equals(product)) {
-                            myTobacco.add(new Tobacco());
-                        } else if (Matches.class.equals(product)) {
-                            myMatches.add(new Matches());
-                        } else {
-                            myCigarettes.add(new Cigarette());
-                        }
-                    }
-                }
+                fold();
                 LOGGER.info("Go to sleep");
                 Thread.sleep(sleepAmount);
             }
@@ -150,5 +89,66 @@ public class AbstractProducer implements Runnable {
         }
 
         return builder.toString();
+    }
+
+    private void produce() throws IllegalAccessException, InstantiationException {
+        Resource productTemp;
+
+        LOGGER.info(String.format("Producing a %s", product.getSimpleName()));
+        for (int i = 0; i < stock; i++) {
+            if (product != null) {
+                if (Tobacco.class.equals(product)) {
+                    if (!tobaccoPoll.isWarehouseFull()) {
+                        productTemp = (Resource) this.product.newInstance();
+                        tobaccoPoll.produceProduct((Tobacco) productTemp);
+                    }
+                } else if (Matches.class.equals(product)) {
+                    if (!matchesPool.isWarehouseFull()) {
+                        productTemp = (Resource) this.product.newInstance();
+                        matchesPool.produceProduct((Matches) productTemp);
+                    }
+                } else {
+                    if (!cigarettePool.isWarehouseFull()) {
+                        productTemp = (Resource) this.product.newInstance();
+                        cigarettePool.produceProduct((Cigarette) productTemp);
+                    }
+                }
+            }
+        }
+        LOGGER.info(String.format("Produced %s", product.getSimpleName()));
+    }
+
+    private void acquire() throws Exception {
+        if (!Tobacco.class.equals(product)) {
+            LOGGER.info("Trying to acquire a tobacco");
+            myTobacco.add(tobaccoPoll.acquireProduct());
+            LOGGER.info(String.format("I acquired %s", myTobacco.peek()));
+        }
+        if (!Matches.class.equals(product)) {
+            LOGGER.info("Trying to acquire a matches");
+            myMatches.add(matchesPool.acquireProduct());
+            LOGGER.info(String.format("I acquired %s", myMatches.peek()));
+        }
+        if (!Cigarette.class.equals(product)) {
+            LOGGER.info("Trying to acquire a cigarette");
+            myCigarettes.add(cigarettePool.acquireProduct());
+            LOGGER.info(String.format("I acquired %s", myCigarettes.peek()));
+        }
+    }
+
+    private void fold() {
+        if (!myCigarettes.isEmpty() && !myTobacco.isEmpty() && !myMatches.isEmpty()) {
+            LOGGER.info(String.format("Start smoking %d with\n%s\n%s\n%s", produced++, myCigarettes.poll(), myTobacco.poll(), myMatches.poll()));
+
+            if (product != null) {
+                if (Tobacco.class.equals(product)) {
+                    myTobacco.add(new Tobacco());
+                } else if (Matches.class.equals(product)) {
+                    myMatches.add(new Matches());
+                } else {
+                    myCigarettes.add(new Cigarette());
+                }
+            }
+        }
     }
 }
